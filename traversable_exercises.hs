@@ -129,9 +129,6 @@ instance Traversable n => Traversable (S n) where
   traverse f (S x y) = S <$> traverse f x <*> f y
 --repl> let t = traverse in (t (\i -> Just (i + 1)) (S [1, 2] 3) == Just (S [2, 3] 4), t (\i -> [i + 1, i + 2]) (S (Just 1) 3) == [S (Just 2) 4,S (Just 2) 5,S (Just 3) 4,S (Just 3) 5])
 
-
-
-
 instance (Functor n, Arbitrary (n a), Arbitrary a ) => Arbitrary (S n a) where
   arbitrary = S <$> arbitrary <*> arbitrary
 
@@ -148,15 +145,21 @@ main = do
   quickBatch (traversable trigger)
 
 
-
-
 data Tree a = Leaf | Node a (Tree a) (Tree a)
   deriving (Eq, Show)
 
 instance Functor Tree where
+--fmap :: Functor f => (a -> b) -> f a -> f b
   fmap f Leaf = Leaf
   fmap f (Node a l r) = Node (f a) (fmap f l) (fmap f r)
 
 instance Foldable Tree where
+--foldMap :: (Foldable t, Monoid m) => (b -> m) -> t b -> m
   foldMap f Leaf = mempty
   foldMap f (Node a l r) = f a <> foldMap f l <> foldMap f r
+
+instance Traversable Tree where
+--traverse :: (Applicative a, Traversable t) => (x -> a y) -> t x -> a (t y)
+  traverse f Leaf = pure Leaf
+  traverse f (Node x l r) = Node <$> f x <*> traverse f l <*> traverse f r
+--repl> let t = traverse in (t (\i -> Just (i + 1)) (Node 1 Leaf Leaf), t (\i -> [i + 1, i + 2]) (Node 2 Leaf Leaf), t (\i -> Just (i + 1)) (Node 1 (Node 2 Leaf Leaf) Leaf), t (\i -> [i + 1, i + 2]) (Node 2 (Node 3 Leaf Leaf) Leaf))
