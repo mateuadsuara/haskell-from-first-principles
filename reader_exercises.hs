@@ -1,3 +1,4 @@
+{-# LANGUAGE InstanceSigs #-}
 import Data.Char
 
 cap :: [Char] -> [Char]
@@ -55,3 +56,66 @@ myLiftA2 f a b = f <$> a <*> b
 
 asks :: (r -> a) -> Reader r a
 asks = Reader
+
+instance Functor (Reader r) where
+  fmap :: (a -> b) -> Reader r a -> Reader r b
+  fmap f (Reader ra) = Reader (f . ra)
+
+instance Applicative (Reader r) where
+  pure :: a -> Reader r a
+  pure a = Reader $ const a
+
+  (<*>) :: Reader r (a -> b)
+        -> Reader r a
+        -> Reader r b
+  (Reader rab) <*> (Reader ra) = Reader $ (\r ->
+    let ab = rab r
+        a  = ra r
+        b  = ab a
+    in b)
+
+instance Monad (Reader r) where
+  return = pure
+  (>>=) :: Reader r a
+        -> (a -> Reader r b)
+        -> Reader r b
+  (Reader ra) >>= aRb =
+    Reader $ \r -> let a = ra r
+                       Reader rb = aRb a
+                       b = rb r
+                   in b
+
+x = [1, 2, 3]
+y = [4, 5, 6]
+z = [7, 8, 9]
+
+--lookup :: Eq a => a -> [(a, b)] -> Maybe b
+
+xs :: Maybe Integer
+xs = lookup 3 (zip x y)
+
+ys :: Maybe Integer
+ys = lookup 6 (zip y z)
+
+zs = lookup 4 (zip x y)
+
+z' n = lookup n (zip x z)
+
+x1 :: Maybe (Integer, Integer)
+x1 = (,) <$> xs <*> ys
+
+x2 = (,) <$> ys <*> zs
+
+x3 n = (z' n, z' n)
+
+--uncurry :: (a -> b -> c) -> (a, b) -> c
+
+summed :: Num c => (c, c) -> c
+summed = uncurry (+)
+
+-- && :: Bool -> Bool -> Bool
+-- >3 :: Integer -> Bool
+-- <8 :: Integer -> Bool
+bolt :: Integer -> Bool
+bolt = (&&) <$> (>3) <*> (<8)
+--bolt = runReader ((&&) <$> Reader (>3) <*> Reader (<8))
