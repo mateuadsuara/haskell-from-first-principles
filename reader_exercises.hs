@@ -1,5 +1,6 @@
 {-# LANGUAGE InstanceSigs #-}
 import Data.Char
+import Data.Maybe
 
 cap :: [Char] -> [Char]
 cap xs = map toUpper xs
@@ -119,3 +120,27 @@ summed = uncurry (+)
 bolt :: Integer -> Bool
 bolt = (&&) <$> (>3) <*> (<8)
 --bolt = runReader ((&&) <$> Reader (>3) <*> Reader (<8))
+
+main :: IO ()
+main = do
+  let s' = summed <$> ((,) <$> xs <*> ys)
+  print $ "s'"
+  print $ s'
+  print $ "xs"
+  print $ xs
+  print $ "ys"
+  print $ ys
+  print $ foldr (&&) True $ sequA 7
+  print $ sequA $ fromMaybe 0 s'
+  print $ bolt $ fromMaybe 0 ys
+  --print $
+  --  sequenceA [Just 3, Just 2, Just 1]
+  --print $ sequenceA [x, y]
+  --print $ sequenceA [xs, ys]
+  --print $ s'
+  --print $ fmap summed ((,) <$> xs <*> zs)
+  --print $ bolt 7
+  --print $ fmap bolt z
+  --print $ sequenceA [(>3), (<8), even] 7
+
+sequA m = sequenceA [(>3), (<8), even] m
